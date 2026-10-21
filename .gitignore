@@ -31,3 +31,11 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Go binary built by "go build" in go-api
+go-api/api
