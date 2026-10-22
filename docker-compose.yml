@@ -1,0 +1,44 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    environment:
+      RABBITMQ_DEFAULT_USER: southpark
+      RABBITMQ_DEFAULT_PASS: southpark
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  go-api:
+    build: ./go-api
+    environment:
+      RABBITMQ_URL: amqp://southpark:southpark@rabbitmq:5672/
+      PORT: "8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+
+  consumer:
+    build: ./consumer
+    environment:
+      RABBITMQ_URL: amqp://southpark:southpark@rabbitmq:5672/
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+
+  spammer:
+    build: ./spammer
+    environment:
+      API_URL: http://go-api:8080/messages
+      INTERVAL_SECONDS: "3"
+    depends_on:
+      - go-api
+    restart: on-failure
