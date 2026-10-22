@@ -1,26 +1,40 @@
 package main
 
 import (
-	"context"
-	"fmt" //For printing
 	"log"
 	"net/http"
+	"os"
+
 	"southpark/go-api/internal/adapters/httpadapter"
+	"southpark/go-api/internal/adapters/rabbitmq"
 	"southpark/go-api/internal/app"
-	"southpark/go-api/internal/domain"
 )
 
-// printPublisher is a fake publisher that just prints.
-type  printPublisher struct{}
-
-func (p printPublisher) Publish(ctx context.Context, msg domain.Message) error {
-	fmt.Println("Published:", msg.Author, "says", msg.Body)
-	return nil
-}
 func main() {
-	service := app.NewMessageService(printPublisher{})
+	rabbitURL := getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
+	port := getEnv("PORT", "8080")
+
+	// Driven adapter (outgoing)
+	publisher, err := rabbitmq.NewPublisher(rabbitURL)
+	if err != nil {
+		log.Fatalf("rabbitmq: %v", err)
+	}
+	defer publisher.Close()
+
+	// Core
+	service := app.NewMessageService(publisher)
+
+	// Driving adapter (incoming)
 	handler := httpadapter.NewHandler(service)
 
-	log.Println("listening on :8080")
-	log.Fatal(http.ListenAndServe(":8080", handler.Routes()))
+	log.Printf("listening on :%s", port)
+	log.Fatal(http.ListenAndServe(":"+port, handler.Routes()))
+}
+
+// getEnv returns the environment variable, or fallback if it is empty.
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }
