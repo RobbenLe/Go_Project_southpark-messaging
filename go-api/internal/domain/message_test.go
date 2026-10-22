@@ -5,13 +5,13 @@ import (
 	"testing"
 )
 
-func TestMessagValidate(t *testing.T) {
+func TestMessageValidate(t *testing.T) {
 	tests := []struct {
 		name  string
 		msg    Message
 		wantErr error
 	}{
-		{"invalid message", Message{Author: "Cartman", Body: "Respect my authoritah!"}, nil},
+		{"valid message", Message{Author: "Cartman", Body: "Respect my authoritah!"}, nil},
 		{"missing author", Message{Author: "", Body: "Hi"}, ErrMissingAuthor},
 		{"author only spaces", Message{Author: "   ", Body: "Hi"}, ErrMissingAuthor},
 		{"missing body", Message{Author: "Kenny", Body: ""}, ErrMissingBody},

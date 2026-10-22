@@ -1,9 +1,13 @@
 package main
+
 import (
-	"fmt" //For printing
 	"context"
+	"fmt" //For printing
+	"log"
+	"net/http"
+	"southpark/go-api/internal/adapters/httpadapter"
+	"southpark/go-api/internal/app"
 	"southpark/go-api/internal/domain"
-	ports "southpark/go-api/internal/ports"
 )
 
 // printPublisher is a fake publisher that just prints.
@@ -14,9 +18,9 @@ func (p printPublisher) Publish(ctx context.Context, msg domain.Message) error {
 	return nil
 }
 func main() {
-	var pub ports.MessagePublisher = printPublisher{}
+	service := app.NewMessageService(printPublisher{})
+	handler := httpadapter.NewHandler(service)
 
-	msg := domain.Message{Author: "Cartman", Body: "Screw you guys, I'm going home!"}
-	err := pub.Publish(context.Background(), msg)
-	fmt.Println("error:", err)
+	log.Println("listening on :8080")
+	log.Fatal(http.ListenAndServe(":8080", handler.Routes()))
 }
