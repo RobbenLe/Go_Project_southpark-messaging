@@ -1,0 +1,2 @@
+go build, go run, go test, go get	  Inside go-api (where go.mod is)
+docker compose up (Day 2)	          Repo root (where docker-compose.yml is)
